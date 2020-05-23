@@ -2,8 +2,9 @@
 
 namespace crmeb\services\sms\storage;
 
-use crmeb\basic\BaseSms;
 use think\facade\Config;
+use crmeb\basic\BaseSms;
+use crmeb\services\HttpService;
 
 
 /**
@@ -18,6 +19,8 @@ class Aliyun extends BaseSms
     protected $templateCode = '';
     protected $accessKeyId = '';
     protected $accessKeySecret = '';
+
+    protected $apiUrl = 'http://dysmsapi.aliyuncs.com/';
 
     protected function initialize(array $config)
     {
@@ -34,7 +37,7 @@ class Aliyun extends BaseSms
     public function send(string $phone, string $templateId, array $data = [])
     {
         if (empty($phone)) {
-            return $this->setError('Mobile number cannot be empty');
+            return $this->setError('手机号码不能为空');
         }
 
         if ($templateId != 'VERIFICATION_CODE') {
@@ -65,80 +68,52 @@ class Aliyun extends BaseSms
             'Version' => '2017-05-25',
         ), $params);
 
-        if (!empty($params['TemplateParam']) && is_array($params['TemplateParam'])) {
+        if (isset($params['TemplateParam']) && is_array($params['TemplateParam'])) {
             $params['TemplateParam'] = json_encode($params['TemplateParam'], JSON_UNESCAPED_UNICODE);
         }
 
         ksort($params);
-        $sortedQueryString = '';
-        foreach ($params as $key => $value) {
-            $sortedQueryString .= '&' . $this->url_encode($key) . '=' . $this->url_encode($value);
-        }
+        $sortedQuery = http_build_query($params, null, '&', PHP_QUERY_RFC3986);
 
-        $signature = "POST&%2F&" . $this->url_encode(substr($sortedQueryString, 1));
-        $signature = $this->url_encode(
+        $signature = "POST&%2F&" . rawurlencode($sortedQuery);
+        $signature = rawurlencode(
             base64_encode(hash_hmac('sha1', $signature, $this->accessKeySecret . '&', true))
         );
 
-        try {
-            $body = "Signature={$signature}{$sortedQueryString}";
-            $content = $this->api_request('http://dysmsapi.aliyuncs.com/', 'POST', $body);
-            if ($content) {
-                $res = json_decode($content);
-                return array('data' => array(
-                    'id' => $res->BizId,
-                    'content' => $content,
-                    'template' => $params['TemplateCode']
-                ));
-            }
-        } catch (\Exception $e) {
-            $this->setError($e->getMessage());
+        $body = "Signature={$signature}&{$sortedQuery}";
+        $data = $this->api_request($this->apiUrl, 'POST', $body);
+        if ($data === false) {
+            return false;
         }
 
-        return false;
+        list($obj, $content) = $data;
+        return array(
+            'data' => array(
+                'id' => $obj->RequestId,
+                'content' => $content,
+                'template' => $params['TemplateCode']
+            )
+        );
     }
 
     private function api_request(string $url, string $method, string $body)
     {
-        $ch = curl_init();
+        $header = array('x-sdk-client' => 'php/2.0.0');
+        $content = HttpService::request($url, $method, $body, $header);
 
-        if ($method == 'POST') {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-        } else {
-            $url .= '?' . $body;
+        if ($content === false) {
+            return $this->setError(HttpService::$curlError);
         }
 
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'x-sdk-client' => 'php/2.0.0'
-        ));
+        $json = json_decode($content);
 
-        if (substr($url, 0, 5) == 'https') {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        if ($json === false) {
+            return $this->setError(json_last_error_msg());
+        }
+        if ($json->Code != 'Code') {
+            return $this->setError($json->Message);
         }
 
-        $rtn = curl_exec($ch);
-
-        if ($rtn === false) {
-            $err = '[CURL_' . curl_errno($ch) . ']: ' . curl_error($ch);
-            return $this->setError($err);
-        }
-
-        curl_close($ch);
-
-        return $rtn;
-    }
-
-    private function url_encode(string $str)
-    {
-        $res = urlencode($str);
-        $res = preg_replace('/\+/', '%20', $res);
-        $res = preg_replace('/\*/', '%2A', $res);
-        $res = preg_replace('/%7E/', '~', $res);
-        return $res;
+        return [$json, $content];
     }
 }
