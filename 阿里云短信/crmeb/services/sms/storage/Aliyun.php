@@ -53,6 +53,7 @@ class Aliyun extends BaseSms
 
     private function send_core(string $phone, array $params = [])
     {
+        $method = 'POST';
         $params = array_merge(array(
             'AccessKeyId' => $this->accessKeyId,
             'Action' => 'SendSms',
@@ -75,13 +76,13 @@ class Aliyun extends BaseSms
         ksort($params);
         $sortedQuery = http_build_query($params, null, '&', PHP_QUERY_RFC3986);
 
-        $signature = "POST&%2F&" . rawurlencode($sortedQuery);
+        $signature = "{$method}&%2F&" . rawurlencode($sortedQuery);
         $signature = rawurlencode(
             base64_encode(hash_hmac('sha1', $signature, $this->accessKeySecret . '&', true))
         );
 
         $body = "Signature={$signature}&{$sortedQuery}";
-        $data = $this->api_request($this->apiUrl, 'POST', $body);
+        $data = $this->api_request($this->apiUrl, $method, $body);
         if ($data === false) {
             return false;
         }
@@ -102,7 +103,7 @@ class Aliyun extends BaseSms
         $content = HttpService::request($url, $method, $body, $header);
 
         if ($content === false) {
-            return $this->setError(HttpService::$curlError);
+            return $this->setError(HttpService::getCurlError());
         }
 
         $json = json_decode($content);
