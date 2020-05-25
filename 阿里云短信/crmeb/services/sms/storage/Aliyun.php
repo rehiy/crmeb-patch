@@ -9,7 +9,7 @@ use crmeb\services\HttpService;
 
 /**
  * 阿里云短信服务
- * Class SMSService
+ * Class Aliyun
  * @package crmeb\services\sms\storage
  * @author 若海<https://github.com/anrip/crmeb-patch>
  */
