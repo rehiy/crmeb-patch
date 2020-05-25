@@ -36,7 +36,7 @@ class Virtual extends YiLianYun
     /**
      * 设置打印内容
      * @param array $config
-     * @return YiLianYun
+     * @return Virtual
      */
     public function setPrinterContent(array $config): self
     {
