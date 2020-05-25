@@ -12,7 +12,7 @@ return [
         'yi_lian_yun' => [],
         //虚拟打印
         'virtual' => [
-            'save_dir' => 'vprint/'
+            'save_dir' => app()->getRuntimePath() . 'vprint/'
         ],
     ]
 ];

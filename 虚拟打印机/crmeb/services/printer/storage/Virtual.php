@@ -11,7 +11,7 @@ use think\facade\Config;
  */
 class Virtual extends YiLianYun
 {
-    private $orderInfo;
+    private $orderId;
 
     /**
      * 开始打印
@@ -25,22 +25,25 @@ class Virtual extends YiLianYun
         }
 
         $conf = Config::get('printer.stores.virtual', []);
-        $sdir = app()->getRuntimePath() . $conf['save_dir'];
 
-        is_dir($sdir) || mkdir($sdir, '0755');
-        $file = $this->orderInfo['order_id'] . 'html';
+        $sdir = $conf['save_dir'];
+        is_dir($sdir) || mkdir($sdir, 0777, true);
 
-        file_put_contents($sdir . $file, $this->printerContent);
+        $file = $sdir . $this->orderId . '.html';
+        file_put_contents($file, $this->printerContent);
     }
 
     /**
      * 设置打印内容
      * @param array $config
-     * @return Virtual
+     * @return YiLianYun
      */
-    public function setPrinterContent(array $config): self
+    public function setPrinterContent(array $config): YiLianYun
     {
-        $this->orderInfo = $config['orderInfo'];
-        return parent::setPrinterContent($config);
+        $this->orderId = $config['orderInfo']['order_id'];
+
+        parent::setPrinterContent($config);
+
+        return $this;
     }
 }
