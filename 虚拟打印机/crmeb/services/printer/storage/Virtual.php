@@ -30,7 +30,7 @@ class Virtual extends YiLianYun
         is_dir($sdir) || mkdir($sdir, '0755');
         $file = $this->orderInfo['order_id'] . 'html';
 
-        file_put_contents($sdir . $file, $this->setPrinterContent);
+        file_put_contents($sdir . $file, $this->printerContent);
     }
 
     /**
