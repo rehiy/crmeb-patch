@@ -39,11 +39,11 @@ class Aliyun extends BaseSms
     public function send(string $phone, string $templateId, array $data = [])
     {
         if (empty($phone)) {
-            return $this->setError('手机号码不能为空');
+            return $this->setError('Mobile number cannot be empty');
         }
 
         if(empty($this->templates[$templateId])) {
-            return $this->setError('暂不支持此类型消息');
+            return $this->setError('Missing template number');
         }
 
         return $this->send_core($phone, array(
