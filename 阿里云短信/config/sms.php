@@ -42,11 +42,34 @@ return [
         ],
         //阿里云
         'aliyun' => [
-            'template_id' => [],
-            'signName' => '若海',
-            'templateCode' => 'SMS_12345678',
-            'accessKeyId' => 'LTqFcu84Kwm2YwfBjpvAIRa0Lqg',
-            'accessKeySecret' => 'OfrE84KwmHu2wYwBb3ljpu2YwfKfRnn',
+            //短信模板id
+            'template_id' => [
+                //验证码
+                'VERIFICATION_CODE' => 'YOUR-TEMPLATE-ID',
+                //支付成功
+                'PAY_SUCCESS_CODE' => '',
+                //发货提醒
+                'DELIVER_GOODS_CODE' => '',
+                //确认收货提醒
+                'TAKE_DELIVERY_CODE' => '',
+                //管理员下单提醒
+                'ADMIN_PLACE_ORDER_CODE' => '',
+                //管理员退货提醒
+                'ADMIN_RETURN_GOODS_CODE' => '',
+                //管理员支付成功提醒
+                'ADMIN_PAY_SUCCESS_CODE' => '',
+                //管理员确认收货
+                'ADMIN_TAKE_DELIVERY_CODE' => '',
+                //改价提醒
+                'PRICE_REVISION_CODE' => '',
+                //订单未支付
+                'ORDER_PAY_FALSE' => '',
+            ],
+            //短信签名
+            'sign_name' => 'YOUR-SIGN-NAME',
+            //认证密钥
+            'access_key_id' => 'YOUR-ACCESS-KEY-ID',
+            'access_key_secret' => 'YOUR-ACCESS-KEY-SECRET',
         ]
     ]
 ];

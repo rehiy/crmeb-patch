@@ -15,8 +15,9 @@ use crmeb\services\HttpService;
  */
 class Aliyun extends BaseSms
 {
+    protected $templates = [];
+
     protected $signName = '';
-    protected $templateCode = '';
     protected $accessKeyId = '';
     protected $accessKeySecret = '';
 
@@ -28,10 +29,11 @@ class Aliyun extends BaseSms
 
         $conf = Config::get('sms.stores.aliyun', []);
 
-        $this->signName = $conf['signName'];
-        $this->templateCode = $conf['templateCode'];
-        $this->accessKeyId = $conf['accessKeyId'];
-        $this->accessKeySecret = $conf['accessKeySecret'];
+        $this->templates = $conf['template_id'];
+
+        $this->signName = $conf['sign_name'];
+        $this->accessKeyId = $conf['access_key_id'];
+        $this->accessKeySecret = $conf['access_key_secret'];
     }
 
     public function send(string $phone, string $templateId, array $data = [])
@@ -40,14 +42,13 @@ class Aliyun extends BaseSms
             return $this->setError('手机号码不能为空');
         }
 
-        if ($templateId != 'VERIFICATION_CODE') {
-            return $this->setError('暂不支持其他类型消息');
+        if(empty($this->templates[$templateId])) {
+            return $this->setError('暂不支持此类型消息');
         }
 
         return $this->send_core($phone, array(
-            'TemplateParam' => array(
-                'code' => $data['code']
-            )
+            'TemplateCode' => $this->templates[$templateId],
+            'TemplateParam' => $data
         ));
     }
 
@@ -64,7 +65,6 @@ class Aliyun extends BaseSms
             'SignatureMethod' => 'HMAC-SHA1',
             'SignatureNonce' => uniqid(mt_rand(0, 0xffff), true),
             'SignatureVersion' => '1.0',
-            'TemplateCode' => $this->templateCode,
             'Timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'Version' => '2017-05-25',
         ), $params);
