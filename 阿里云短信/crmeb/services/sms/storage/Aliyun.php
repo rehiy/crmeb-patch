@@ -101,7 +101,7 @@ class Aliyun extends BaseSms
         $header = ['x-sdk-client' => 'php/2.0.0'];
         $result = HttpService::request($url, $method, $body, $header);
 
-        if ($content === false) {
+        if ($result === false) {
             return $this->setError(HttpService::getCurlError());
         }
 
