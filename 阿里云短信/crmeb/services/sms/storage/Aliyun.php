@@ -46,16 +46,16 @@ class Aliyun extends BaseSms
             return $this->setError('Missing template number');
         }
 
-        return $this->send_core($phone, array(
+        return $this->send_core($phone, [
             'TemplateCode' => $this->templates[$templateId],
             'TemplateParam' => $data
-        ));
+        ]);
     }
 
     private function send_core(string $phone, array $params = [])
     {
         $method = 'POST';
-        $params = array_merge(array(
+        $params = array_merge([
             'AccessKeyId' => $this->accessKeyId,
             'Action' => 'SendSms',
             'Format' => 'JSON',
@@ -67,7 +67,7 @@ class Aliyun extends BaseSms
             'SignatureVersion' => '1.0',
             'Timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'Version' => '2017-05-25',
-        ), $params);
+        ], $params);
 
         if (isset($params['TemplateParam']) && is_array($params['TemplateParam'])) {
             $params['TemplateParam'] = json_encode($params['TemplateParam'], JSON_UNESCAPED_UNICODE);
@@ -87,34 +87,34 @@ class Aliyun extends BaseSms
             return false;
         }
 
-        list($obj, $content) = $data;
-        return array(
-            'data' => array(
-                'id' => $obj->RequestId,
-                'content' => $content,
-                'template' => $params['TemplateCode']
-            )
-        );
+        return [
+            'data' => [
+                'id' => $data->RequestId,
+                'template' => $params['TemplateCode'],
+                'content' => json_decode($params['TemplateParam'])
+            ]
+        ];
     }
 
     private function api_request(string $url, string $method, string $body)
     {
-        $header = array('x-sdk-client' => 'php/2.0.0');
-        $content = HttpService::request($url, $method, $body, $header);
+        $header = ['x-sdk-client' => 'php/2.0.0'];
+        $result = HttpService::request($url, $method, $body, $header);
 
         if ($content === false) {
             return $this->setError(HttpService::getCurlError());
         }
 
-        $json = json_decode($content);
+        $json = json_decode($result);
 
         if ($json === false) {
             return $this->setError(json_last_error_msg());
         }
-        if ($json->Code != 'Code') {
+
+        if ($json->Code != 'OK') {
             return $this->setError($json->Message);
         }
 
-        return [$json, $content];
+        return $json;
     }
 }
