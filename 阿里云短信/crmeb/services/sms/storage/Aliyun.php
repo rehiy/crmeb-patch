@@ -42,13 +42,13 @@ class Aliyun extends BaseSms
             return $this->setError('Mobile number cannot be empty');
         }
 
-        if(empty($this->templates[$templateId])) {
+        if (empty($this->templates[$templateId])) {
             return $this->setError('Missing template number');
         }
 
         return $this->send_core($phone, [
             'TemplateCode' => $this->templates[$templateId],
-            'TemplateParam' => $data
+            'TemplateParam' => $data,
         ]);
     }
 
@@ -90,8 +90,8 @@ class Aliyun extends BaseSms
         return [
             'data' => [
                 'id' => $data->RequestId,
+                'content' => $params['TemplateParam'],
                 'template' => $params['TemplateCode'],
-                'content' => json_decode($params['TemplateParam'])
             ]
         ];
     }
